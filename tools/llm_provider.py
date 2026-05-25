@@ -10,6 +10,7 @@ Override: set LLM_PROVIDER in .env
 
 import os
 import json
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -135,9 +136,24 @@ def _call_minimax(messages, tools, model, temperature, max_tokens):
         kwargs["tools"] = [{"type": "function", "function": t} for t in tools]
         kwargs["tool_choice"] = "auto"
 
-    resp = client.chat.completions.create(**kwargs)
-    msg  = resp.choices[0].message
-    return _parse_openai_response(msg, model, MINIMAX)
+    last_err = None
+    for attempt in range(3):
+        try:
+            resp = client.chat.completions.create(**kwargs)
+            # MiniMax sometimes returns choices=None on transient errors
+            if not resp.choices:
+                raw = getattr(resp, "model_extra", {}) or {}
+                base = raw.get("base_resp", {}) or {}
+                raise RuntimeError(
+                    f"MiniMax returned empty choices (attempt {attempt+1}/3). "
+                    f"base_resp={base}"
+                )
+            return _parse_openai_response(resp.choices[0].message, model, MINIMAX)
+        except Exception as e:
+            last_err = e
+            if attempt < 2:
+                time.sleep(2 ** attempt)   # 1s, 2s backoff
+    raise RuntimeError(f"MiniMax failed after 3 attempts: {last_err}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
