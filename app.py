@@ -93,19 +93,19 @@ _LOGIN_HTML = """<!DOCTYPE html>
 <title>PP Agent — Sign In</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#0a0e1a; color:#f3f4f6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  body { background:#0c0c0d; color:#e8e8ec; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
          min-height:100vh; display:flex; align-items:center; justify-content:center; }
-  .card { background:#111827; border:1px solid #1f2937; border-radius:16px; padding:40px 48px;
+  .card { background:#111113; border:1px solid #1c1c1e; border-radius:16px; padding:40px 48px;
           width:360px; text-align:center; }
   .logo { font-size:36px; margin-bottom:16px; }
   h1 { font-size:18px; font-weight:600; margin-bottom:6px; }
-  p  { font-size:13px; color:#6b7280; margin-bottom:28px; }
-  input { width:100%; background:#1f2937; border:1px solid #374151; border-radius:8px;
-          color:#f3f4f6; font-size:14px; padding:10px 14px; outline:none; margin-bottom:14px; }
-  input:focus { border-color:#6366f1; }
-  button { width:100%; background:#6366f1; border:none; border-radius:8px; color:#fff;
+  p  { font-size:13px; color:#56566a; margin-bottom:28px; }
+  input { width:100%; background:#141416; border:1px solid #1c1c1e; border-radius:8px;
+          color:#e8e8ec; font-size:14px; padding:10px 14px; outline:none; margin-bottom:14px; }
+  input:focus { border-color:#5c6bc0; }
+  button { width:100%; background:#5c6bc0; border:none; border-radius:8px; color:#fff;
            font-size:14px; font-weight:600; padding:11px; cursor:pointer; }
-  button:hover { background:#4f46e5; }
+  button:hover { background:#4a5aae; }
   .err { color:#f87171; font-size:13px; margin-top:10px; }
 </style>
 </head>
@@ -1019,16 +1019,16 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <title>PP Agent — Power Platform AI</title>
 <style>
   :root {
-    --bg:        #0a0e1a;
-    --bg2:       #111827;
-    --bg3:       #1f2937;
-    --bg4:       #374151;
-    --border:    #1f2937;
-    --text:      #f3f4f6;
-    --text2:     #9ca3af;
-    --text3:     #6b7280;
-    --accent:    #6366f1;
-    --accent2:   #4f46e5;
+    --bg:        #0c0c0d;
+    --bg2:       #111113;
+    --bg3:       #141416;
+    --bg4:       #1e1e22;
+    --border:    #1c1c1e;
+    --text:      #e8e8ec;
+    --text2:     #8b8b9a;
+    --text3:     #56566a;
+    --accent:    #5c6bc0;
+    --accent2:   #4a5aae;
     --green:     #10b981;
     --red:       #ef4444;
     --yellow:    #f59e0b;
@@ -1062,7 +1062,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .topbar-logo {
     font-size: 18px;
     font-weight: 700;
-    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    background: linear-gradient(135deg, #5c6bc0, #818cf8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     white-space: nowrap;
@@ -1169,8 +1169,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .nav-item.command-item {
     margin: 0;
     padding: 11px 14px;
-    background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(6,182,212,.12));
-    border: 1px solid rgba(99,102,241,.35);
+    background: linear-gradient(135deg, rgba(92,107,192,.18), rgba(129,140,248,.12));
+    border: 1px solid rgba(92,107,192,.35);
     border-radius: 8px;
     color: var(--text);
     font-size: 13px;
@@ -1178,13 +1178,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   }
   .nav-item.command-item::before { display: none; }
   .nav-item.command-item:hover {
-    background: linear-gradient(135deg, rgba(99,102,241,.28), rgba(6,182,212,.22));
-    border-color: rgba(99,102,241,.6);
+    background: linear-gradient(135deg, rgba(92,107,192,.28), rgba(129,140,248,.22));
+    border-color: rgba(92,107,192,.6);
   }
   .nav-item.command-item.active {
-    background: linear-gradient(135deg, rgba(99,102,241,.35), rgba(6,182,212,.28));
-    border-color: #6366f1;
-    box-shadow: 0 0 12px rgba(99,102,241,.3);
+    background: linear-gradient(135deg, rgba(92,107,192,.35), rgba(129,140,248,.28));
+    border-color: #5c6bc0;
+    box-shadow: 0 0 12px rgba(92,107,192,.3);
   }
   .nav-item.command-item .icon { font-size: 16px; }
   .nav-item.command-item .cmd-sub {
@@ -1203,13 +1203,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .cmd-panel-header {
     padding: 18px 22px 14px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(6,182,212,.05));
+    background: linear-gradient(135deg, rgba(92,107,192,.08), rgba(129,140,248,.05));
     flex-shrink: 0;
   }
   .cmd-panel-title {
     font-size: 18px;
     font-weight: 700;
-    background: linear-gradient(135deg, #818cf8, #06b6d4);
+    background: linear-gradient(135deg, #818cf8, #a5b4fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 3px;
@@ -1234,8 +1234,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     user-select: none;
   }
   .plan-toggle.active {
-    background: rgba(99,102,241,.15);
-    border-color: #6366f1;
+    background: rgba(92,107,192,.15);
+    border-color: #5c6bc0;
     color: var(--text);
   }
   .plan-toggle .toggle-dot {
@@ -1246,7 +1246,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     transition: background .2s;
     flex-shrink: 0;
   }
-  .plan-toggle.active .toggle-dot { background: #6366f1; }
+  .plan-toggle.active .toggle-dot { background: #5c6bc0; }
   .plan-toggle .toggle-dot::after {
     content: '';
     position: absolute;
@@ -1260,8 +1260,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   /* ── Plan card (agent response when plan_mode=true) ─────────────────────── */
   .plan-card {
-    background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(6,182,212,.05));
-    border: 1px solid rgba(99,102,241,.35);
+    background: linear-gradient(135deg, rgba(92,107,192,.08), rgba(129,140,248,.05));
+    border: 1px solid rgba(92,107,192,.35);
     border-radius: 12px;
     padding: 16px 18px;
     margin-top: 8px;
@@ -1289,7 +1289,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     flex-wrap: wrap;
   }
   .btn-proceed {
-    background: linear-gradient(135deg,#6366f1,#06b6d4);
+    background: linear-gradient(135deg,#5c6bc0,#818cf8);
     border: none;
     border-radius: 7px;
     color: white;
@@ -1323,12 +1323,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   }
   .cmd-empty-icon {
     font-size: 52px;
-    filter: drop-shadow(0 0 20px rgba(99,102,241,.5));
+    filter: drop-shadow(0 0 20px rgba(92,107,192,.5));
   }
   .cmd-empty-title {
     font-size: 16px;
     font-weight: 700;
-    background: linear-gradient(135deg, #818cf8, #06b6d4);
+    background: linear-gradient(135deg, #818cf8, #a5b4fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -1368,8 +1368,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     font-family: inherit;
   }
   .cmd-badge:hover {
-    background: rgba(129,140,248,.15);
-    border-color: #818cf8;
+    background: rgba(92,107,192,.15);
+    border-color: #5c6bc0;
     color: var(--text);
     transform: translateY(-1px);
   }
@@ -1544,13 +1544,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   /* pending write card */
   .write-card {
-    background: #1a0f2e;
-    border: 1px solid #5b21b6;
+    background: #0e1035;
+    border: 1px solid #3d4a9e;
     border-radius: 10px;
     padding: 14px 16px;
     margin-top: 8px;
   }
-  .write-card-header { font-size: 13px; font-weight: 600; color: #c4b5fd; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .write-card-header { font-size: 13px; font-weight: 600; color: #a5b4fc; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
   .write-card-preview { font-size: 12px; color: var(--text2); white-space: pre-wrap; margin-bottom: 12px; }
   .write-card-actions { display: flex; gap: 8px; }
   .btn-confirm {
@@ -1763,7 +1763,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     transition: border-color .15s;
   }
   .model-option:hover { border-color: var(--accent); }
-  .model-option.selected { border-color: var(--accent); background: #1e1b4b; }
+  .model-option.selected { border-color: var(--accent); background: #1e2050; }
   .model-option .mo-provider {
     font-size: 10px;
     text-transform: uppercase;
@@ -1977,7 +1977,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <div class="topbar-logo">⚡ PP Agent <span>Power Platform AI</span></div>
+  <div class="topbar-logo">◈ PP Agent <span>Power Platform AI</span></div>
   <div class="topbar-sep"></div>
   <!-- Environment quick-switch pills (populated by loadEnvPills()) -->
   <div class="env-pills" id="env-pills"></div>
@@ -2112,7 +2112,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         {% endfor %}
       </div>
       <div class="input-bar">
-        <div class="input-wrap" style="border-color:rgba(99,102,241,.4);">
+        <div class="input-wrap" style="border-color:rgba(92,107,192,.4);">
           <textarea class="chat-input" id="input-command"
             placeholder="Describe your goal… e.g. 'Show all failing flows and the solutions they belong to'"
             rows="1"
@@ -2120,8 +2120,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             oninput="autoResize(this)"></textarea>
         </div>
         <button class="send-btn" id="send-command"
-          style="background:linear-gradient(135deg,#6366f1,#06b6d4);"
-          onclick="sendMessage('command')">Send ✨</button>
+          style="background:linear-gradient(135deg,#5c6bc0,#818cf8);"
+          onclick="sendMessage('command')">Send ✦</button>
       </div>
     </div>
     {% else %}
@@ -2288,7 +2288,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   <div style="font-size:16px; font-weight:700; color:#fff;" id="restart-msg">Restarting server…</div>
   <div style="font-size:12px; color:rgba(255,255,255,.5);">Page will reload automatically when ready</div>
   <div style="width:240px; height:3px; background:rgba(255,255,255,.1); border-radius:2px; margin-top:4px;">
-    <div id="restart-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#818cf8,#06b6d4); border-radius:2px; transition:width .3s;"></div>
+    <div id="restart-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#5c6bc0,#818cf8); border-radius:2px; transition:width .3s;"></div>
   </div>
 </div>
 <style>
