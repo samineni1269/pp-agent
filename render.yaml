@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: pp-agent
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120
+    envVars:
+      # ── Required: Power Platform ──────────────────────────────────────────
+      - key: PP_CLIENT_ID
+        sync: false          # set manually in Render dashboard
+      - key: PP_TENANT_ID
+        sync: false
+      - key: PP_ENV_URL
+        sync: false
+      - key: PP_ENV_NAME
+        value: Production
+      # ── Required: LLM ────────────────────────────────────────────────────
+      - key: MINIMAX_API_KEY
+        sync: false
+      - key: MINIMAX_GROUP_ID
+        sync: false
+      # ── Required: Security ────────────────────────────────────────────────
+      - key: APP_PASSWORD
+        sync: false          # password users must enter to access the app
+      - key: FLASK_SECRET
+        generateValue: true  # Render auto-generates a secure random value
+      # ── Optional ─────────────────────────────────────────────────────────
+      - key: PP_CLIENT_SECRET
+        sync: false          # only needed for service principal auth
+      - key: PP_ENV_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

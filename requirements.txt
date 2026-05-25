@@ -1,0 +1,25 @@
+# PP Agent — Python Dependencies
+# Install: pip install -r requirements.txt
+
+# ── Web Framework ─────────────────────────────────────────────────────────────
+flask>=3.0.0
+python-dotenv>=1.0.0
+
+# ── Authentication ────────────────────────────────────────────────────────────
+msal>=1.28.0
+
+# ── HTTP Client ───────────────────────────────────────────────────────────────
+requests>=2.31.0
+
+# ── LLM SDKs ─────────────────────────────────────────────────────────────────
+openai>=1.30.0          # MiniMax (OpenAI-compatible), OpenAI, Gemini, OpenRouter
+anthropic>=0.28.0       # Claude
+
+# ── CLI Output ───────────────────────────────────────────────────────────────
+rich>=13.7.0
+
+# ── Production server (used by Render / gunicorn) ────────────────────────────
+gunicorn>=21.2.0
+
+# ── Optional: improved JSON handling ─────────────────────────────────────────
+# ujson>=5.9.0

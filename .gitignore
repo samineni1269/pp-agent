@@ -1,0 +1,24 @@
+# Credentials — never commit
+.env
+token_cache.json
+agent_memory.json
+knowledge_base.json
+chat_history.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Mac
+.DS_Store
+
+# Exports / downloads
+*.zip
+exports/
+downloads/
