@@ -32,14 +32,15 @@ _INJECTION_PATTERNS = [
 ]
 
 # Patterns that look like leaked credentials / secrets
+# NOTE: Keep these specific — Dataverse responses contain long GUIDs, solution
+# names, and version strings that must NOT be caught as false positives.
 _CREDENTIAL_PATTERNS = [
-    r"[A-Za-z0-9+/]{40,}={0,2}",          # long base64 strings (API keys)
-    r"sk-[A-Za-z0-9]{20,}",               # OpenAI-style secret keys
-    r"Bearer\s+[A-Za-z0-9\-._~+/]{20,}",  # Bearer tokens
-    r"password\s*[:=]\s*\S{6,}",          # password = something
-    r"secret\s*[:=]\s*\S{6,}",            # secret = something
-    r"api[_\-]?key\s*[:=]\s*\S{6,}",      # api_key = something
-    r"eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+",  # JWT tokens
+    r"sk-[A-Za-z0-9]{32,}",                              # OpenAI-style secret keys
+    r"Bearer\s+eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+",   # Bearer JWT tokens only
+    r"eyJ[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}",  # JWT (3 parts)
+    r"password\s*[:=]\s*[\"']?\S{8,}[\"']?",             # password = something
+    r"client[_\-]?secret\s*[:=]\s*[\"']?\S{8,}[\"']?",  # client_secret = something
+    r"api[_\-]?key\s*[:=]\s*[\"']?[A-Za-z0-9\-_]{20,}[\"']?",  # api_key = something
 ]
 
 # Phrases that indicate the agent is refusing or confused
