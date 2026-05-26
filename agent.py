@@ -997,6 +997,23 @@ def run_agent(
         tool_calls = result.get("tool_calls") or []
 
         if not tool_calls:
+            # ── Handle empty LLM response (e.g. MiniMax server error) ──────────
+            if not content or not content.strip():
+                llm_err = result.get("error") or result.get("error_description") or ""
+                final_reply = (
+                    f"❌ The LLM returned an empty response."
+                    + (f" Reason: {llm_err}" if llm_err else "")
+                    + f"\n\nThis usually means the LLM API key is missing or the provider "
+                    f"({_provider}) is having issues. "
+                    f"Set a working API key in Settings (ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY) "
+                    f"and set LLM_PROVIDER accordingly."
+                )
+                return {
+                    "reply":   final_reply,
+                    "domain":  _domain,
+                    "history": history,
+                }
+
             # ── Reflection: critic LLM pass ────────────────────────────────────
             final_reply = content
             if _REFLECTION and reflection_enabled() and tool_trace:
@@ -1011,10 +1028,6 @@ def run_agent(
                 out_guard = check_output(final_reply)
                 if out_guard.get("ok"):
                     final_reply = out_guard.get("response", final_reply)
-                else:
-                    final_reply = (
-                        final_reply + "\n\n⚠️ *Note: some content was filtered.*"
-                    )
 
             # ── Observability: log the trace ───────────────────────────────────
             if _OBSERVABILITY:
