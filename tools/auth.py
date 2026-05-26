@@ -55,7 +55,7 @@ def _save_cache(cache):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_app(cache=None):
-    """Build the MSAL PublicClientApplication (device code) or ConfidentialClientApplication (client creds)."""
+    """Build ConfidentialClientApplication when secret is set (for client-creds silent flow)."""
     import msal
     authority = f"https://login.microsoftonline.com/{TENANT_ID}"
 
@@ -67,7 +67,6 @@ def _build_app(cache=None):
         )
 
     if CLIENT_SECRET:
-        # Headless / service principal
         return msal.ConfidentialClientApplication(
             CLIENT_ID,
             authority=authority,
@@ -75,12 +74,23 @@ def _build_app(cache=None):
             token_cache=cache,
         )
     else:
-        # Interactive device code
         return msal.PublicClientApplication(
             CLIENT_ID,
             authority=authority,
             token_cache=cache,
         )
+
+
+def _build_public_app(cache=None):
+    """Always returns a PublicClientApplication — required for device code flow."""
+    import msal
+    if not CLIENT_ID:
+        raise RuntimeError("❌ PP_CLIENT_ID not set in .env")
+    return msal.PublicClientApplication(
+        CLIENT_ID,
+        authority=f"https://login.microsoftonline.com/{TENANT_ID}",
+        token_cache=cache,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -108,8 +118,9 @@ def get_token(scope: list[str]) -> str:
         result = app.acquire_token_for_client(scopes=scope)
 
     if not result:
-        # Device code flow
-        flow   = app.initiate_device_flow(scopes=scope)
+        # Device code flow — always needs PublicClientApplication
+        pub_app = _build_public_app(cache)
+        flow    = pub_app.initiate_device_flow(scopes=scope)
         if "user_code" not in flow:
             raise RuntimeError(f"Device flow failed: {flow.get('error_description', 'unknown error')}")
 
@@ -120,7 +131,7 @@ def get_token(scope: list[str]) -> str:
         print(f"  2. Enter: {flow['user_code']}")
         print("\n  Waiting for you to sign in…\n")
 
-        result = app.acquire_token_by_device_flow(flow)
+        result = pub_app.acquire_token_by_device_flow(flow)
 
     _save_cache(cache)
 
@@ -257,10 +268,10 @@ def initiate_device_flow_web(scope: list[str] | None = None) -> dict:
     env_url   = get_active_env_url() or os.getenv("PP_ENV_URL", "").strip()
     use_scope = scope or (DATAVERSE_SCOPE(env_url) if env_url else ["https://service.powerapps.com/.default"])
 
-    cache = _load_cache()
-    app   = _build_app(cache)
+    cache   = _load_cache()
+    pub_app = _build_public_app(cache)  # device code always needs PublicClientApplication
 
-    flow = app.initiate_device_flow(scopes=use_scope)
+    flow = pub_app.initiate_device_flow(scopes=use_scope)
     if "user_code" not in flow:
         raise RuntimeError(f"Device flow init failed: {flow.get('error_description', 'unknown')}")
 
@@ -270,7 +281,7 @@ def initiate_device_flow_web(scope: list[str] | None = None) -> dict:
 
     def _background_acquire():
         try:
-            result = app.acquire_token_by_device_flow(flow)
+            result = pub_app.acquire_token_by_device_flow(flow)
             _save_cache(cache)
             if "access_token" in result:
                 with _device_flow_lock:
