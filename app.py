@@ -1012,7 +1012,7 @@ def api_settings_auth_poll():
 # ─────────────────────────────────────────────────────────────────────────────
 
 @app.route("/api/traces")
-@require_login
+@_login_required
 def api_traces():
     """Return the most recent agent traces for the right-panel observer."""
     try:
@@ -1026,7 +1026,7 @@ def api_traces():
 
 
 @app.route("/api/traces/clear", methods=["POST"])
-@require_login
+@_login_required
 def api_traces_clear():
     """Clear old traces (default: older than 30 days)."""
     try:
