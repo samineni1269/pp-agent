@@ -106,3 +106,78 @@ def summarise_memory() -> str:
         else:
             lines.append(f"- {k}: {str(v)[:80]}")
     return "\n".join(lines)
+
+
+# ── AGENT-FACING ALIASES (used by agent.py dispatch & system prompt) ──────────
+
+def update_memory_entry(key: str, value: str) -> dict:
+    """
+    Agent-facing alias for set_memory().
+    Called by the LLM tool 'update_memory_entry'.
+    """
+    return set_memory(key, value)
+
+
+def get_memory_summary() -> dict:
+    """
+    Return a structured summary of all memory keys.
+    Called by the LLM tool 'get_memory_summary'.
+    """
+    mem = _load()
+    if not mem:
+        return {"message": "No persistent memory stored yet.", "entries": []}
+    entries = []
+    for k, v in list(mem.items())[:30]:
+        if isinstance(v, dict) and "value" in v:
+            entries.append({"key": k, "value": v["value"], "updated": v.get("updated", "")})
+        elif isinstance(v, dict) and "items" in v:
+            items = v["items"]
+            latest = items[-1]["value"] if items else ""
+            entries.append({"key": k, "value": f"{len(items)} entries (latest: {latest})", "updated": ""})
+        else:
+            entries.append({"key": k, "value": str(v)[:200], "updated": ""})
+    return {"entries": entries, "total": len(mem)}
+
+
+def get_relevant_memory_context(query: str = "") -> str:
+    """
+    Return memory facts most relevant to the current query.
+    If query is empty, returns all facts (up to 20 entries).
+    Injected into the system prompt under '## What I Know About Your Org'.
+    """
+    mem = _load()
+    if not mem:
+        return ""
+
+    lines = []
+    query_lower = query.lower()
+
+    # Score each entry: exact key/value match scores higher
+    scored = []
+    for k, v in mem.items():
+        val_str = ""
+        if isinstance(v, dict) and "value" in v:
+            val_str = v["value"]
+        elif isinstance(v, dict) and "items" in v:
+            items = v.get("items", [])
+            val_str = items[-1]["value"] if items else ""
+        else:
+            val_str = str(v)
+
+        if query_lower:
+            score = 0
+            if query_lower in k.lower():
+                score += 2
+            if query_lower in val_str.lower():
+                score += 1
+            scored.append((score, k, val_str))
+        else:
+            scored.append((0, k, val_str))
+
+    # Sort by relevance descending, take top 15
+    scored.sort(key=lambda x: x[0], reverse=True)
+    for score, k, val_str in scored[:15]:
+        if val_str:
+            lines.append(f"- **{k}**: {val_str[:200]}")
+
+    return "\n".join(lines) if lines else ""
