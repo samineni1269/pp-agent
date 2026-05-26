@@ -27,6 +27,31 @@ from tools.llm_provider import call_llm, detect_provider, get_active_model, MODE
 from tools.auth import get_auth_status, get_active_environment
 from tools.pp_knowledge import REFERENCE as PP_KNOWLEDGE_REFERENCE
 
+# ── Agentic upgrades (soft-import — agent still works if any module fails) ────
+try:
+    from tools.guardrails    import check_input, check_output
+    _GUARDRAILS = True
+except Exception:
+    _GUARDRAILS = False
+
+try:
+    from tools.observability import log_trace as _obs_log_trace
+    _OBSERVABILITY = True
+except Exception:
+    _OBSERVABILITY = False
+
+try:
+    from tools.router import classify as _route_classify, get_domain_addendum
+    _ROUTER = True
+except Exception:
+    _ROUTER = False
+
+try:
+    from tools.reflection import reflect as _reflect, reflection_enabled
+    _REFLECTION = True
+except Exception:
+    _REFLECTION = False
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  ENV CONTEXT CACHE  — fetched once per session start, injected into prompt
 # ══════════════════════════════════════════════════════════════════════════════
@@ -907,6 +932,32 @@ def run_agent(
     _provider = provider or detect_provider()
     _model    = model    or get_active_model(_provider)
 
+    _t_start = time.time()  # for observability total_ms
+
+    # ── Guardrails: validate input ─────────────────────────────────────────────
+    if _GUARDRAILS:
+        guard = check_input(user_message)
+        if not guard.get("ok"):
+            return {
+                "reply":         f"⚠️ {guard.get('reason', 'Input blocked by guardrails.')}",
+                "history":       history,
+                "tool_trace":    [],
+                "pending_write": None,
+                "provider":      _provider,
+                "model":         _model,
+                "domain":        "general",
+            }
+
+    # ── Router: classify domain and inject addendum ────────────────────────────
+    _domain = "general"
+    _domain_addendum = ""
+    if _ROUTER:
+        try:
+            _domain = _route_classify(user_message, llm_fallback=False)
+            _domain_addendum = get_domain_addendum(_domain)
+        except Exception:
+            pass
+
     # ── Env context: fetch once on the very first turn of a session ────────────
     env_ctx = ""
     if not history:
@@ -922,6 +973,8 @@ def run_agent(
             env_ctx = _ctx_holder[0] if _ctx_holder else _ENV_CONTEXT_CACHE.get(env_url, "")
 
     system_prompt = _build_system_prompt(user_message, tool_section, plan_mode=plan_mode, env_context=env_ctx)
+    if _domain_addendum:
+        system_prompt += f"\n\n{_domain_addendum}"
 
     # Build messages
     messages = [{"role": "system", "content": system_prompt}]
@@ -944,15 +997,49 @@ def run_agent(
         tool_calls = result.get("tool_calls") or []
 
         if not tool_calls:
+            # ── Reflection: critic LLM pass ────────────────────────────────────
+            final_reply = content
+            if _REFLECTION and reflection_enabled() and tool_trace:
+                # Only reflect when tools were actually used (real agentic work)
+                try:
+                    final_reply = _reflect(user_message, content, _provider, _model)
+                except Exception:
+                    final_reply = content
+
+            # ── Guardrails: validate output ────────────────────────────────────
+            if _GUARDRAILS:
+                out_guard = check_output(final_reply)
+                if out_guard.get("ok"):
+                    final_reply = out_guard.get("response", final_reply)
+                else:
+                    final_reply = (
+                        final_reply + "\n\n⚠️ *Note: some content was filtered.*"
+                    )
+
+            # ── Observability: log the trace ───────────────────────────────────
+            if _OBSERVABILITY:
+                try:
+                    _obs_log_trace(
+                        user_msg   = user_message,
+                        reply      = final_reply,
+                        tool_trace = tool_trace,
+                        provider   = _provider,
+                        model      = _model,
+                        total_ms   = int((time.time() - _t_start) * 1000),
+                    )
+                except Exception:
+                    pass
+
             # Final text response
-            messages.append({"role": "assistant", "content": content})
+            messages.append({"role": "assistant", "content": final_reply})
             return {
-                "reply":         content,
+                "reply":         final_reply,
                 "history":       messages[1:],   # exclude system prompt
                 "tool_trace":    tool_trace,
                 "pending_write": None,
                 "provider":      _provider,
                 "model":         _model,
+                "domain":        _domain,
             }
 
         # ── Check for any WRITE tool in this batch ─────────────────────────────
@@ -981,6 +1068,7 @@ def run_agent(
                         "pending_write": pending_write,
                         "provider":      _provider,
                         "model":         _model,
+                        "domain":        _domain,
                     }
 
         # ── Execute READ tools in parallel ─────────────────────────────────────
