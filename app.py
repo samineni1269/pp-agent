@@ -1008,6 +1008,37 @@ def api_settings_auth_poll():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  OBSERVABILITY — /api/traces  (reads from SQLite)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/api/traces")
+@require_login
+def api_traces():
+    """Return the most recent agent traces for the right-panel observer."""
+    try:
+        from tools.observability import get_traces, get_trace_stats
+        limit  = min(int(request.args.get("limit", 30)), 100)
+        traces = get_traces(limit=limit)
+        stats  = get_trace_stats()
+        return jsonify({"ok": True, "traces": traces, "stats": stats})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e), "traces": [], "stats": {}})
+
+
+@app.route("/api/traces/clear", methods=["POST"])
+@require_login
+def api_traces_clear():
+    """Clear old traces (default: older than 30 days)."""
+    try:
+        from tools.observability import clear_traces
+        days   = int(request.json.get("days", 30) if request.json else 30)
+        result = clear_traces(older_than_days=days)
+        return jsonify({"ok": True, **result})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  HTML TEMPLATE
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -2216,6 +2247,19 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         <span class="rp-value" id="rp-started">—</span>
       </div>
     </div>
+    <div class="rp-section" id="obs-section">
+      <div class="rp-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Agent Traces</span>
+        <span style="font-size:10px;color:var(--text3);font-weight:400;cursor:pointer;" onclick="loadTraces()" title="Refresh">↺</span>
+      </div>
+      <div id="obs-stats" style="display:flex;gap:10px;margin:6px 0 8px;flex-wrap:wrap;">
+        <div style="font-size:11px;color:var(--text2);">Loading…</div>
+      </div>
+      <div id="obs-list" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;"></div>
+      <div style="margin-top:6px;">
+        <div id="obs-domain" style="font-size:11px;color:var(--text3);padding-top:4px;border-top:1px solid var(--border);">Domain: —</div>
+      </div>
+    </div>
     <div class="rp-section">
       <div class="rp-title">Phase 3 Capabilities</div>
       <div style="display:flex;flex-direction:column;gap:4px;padding-top:2px;">
@@ -2478,8 +2522,10 @@ async function sendMessage(toolId) {
           }
 
           if (ev.provider) updateModelDisplay(ev.provider, ev.model);
+          if (ev.domain) updateDomain(ev.domain);
           document.getElementById('nav-' + toolId).classList.add('has-history');
           loadStatus();
+          loadTraces();
           resolve();
         }
       };
@@ -3168,6 +3214,61 @@ function copyDeviceCode() {
 loadStatus();
 loadEnvPills();
 setInterval(loadStatus, 30000);
+
+// ── Agent Traces (Observability) ──────────────────────────────────────────
+async function loadTraces() {
+  try {
+    const res  = await fetch('/api/traces?limit=20');
+    const data = await res.json();
+    if (!data.ok) return;
+
+    // Stats bar
+    const s = data.stats || {};
+    document.getElementById('obs-stats').innerHTML = `
+      <div style="font-size:10px;color:var(--text3);background:var(--bg4);
+           border-radius:4px;padding:2px 6px;">${s.total_traces ?? 0} calls</div>
+      <div style="font-size:10px;color:var(--text3);background:var(--bg4);
+           border-radius:4px;padding:2px 6px;">${s.avg_response_ms ?? 0}ms avg</div>
+      <div style="font-size:10px;color:var(--text3);background:var(--bg4);
+           border-radius:4px;padding:2px 6px;">${s.avg_tools_per_turn ?? 0} tools/turn</div>
+    `;
+
+    // Trace list
+    const list = document.getElementById('obs-list');
+    if (!data.traces || !data.traces.length) {
+      list.innerHTML = '<div style="font-size:11px;color:var(--text3);">No traces yet.</div>';
+      return;
+    }
+    list.innerHTML = data.traces.slice(0, 10).map(t => {
+      const ts  = new Date(t.ts * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      const msg = (t.user_msg || '').slice(0, 40);
+      const tc  = t.tool_count;
+      const ms  = t.total_ms;
+      return `<div style="font-size:11px;color:var(--text2);border-left:2px solid var(--accent);
+                           padding:3px 6px;border-radius:0 4px 4px 0;background:var(--bg4);"
+                   title="${(t.user_msg||'').replace(/"/g,'&quot;')}">
+        <span style="color:var(--text3);font-size:10px;">${ts}</span>
+        <span style="margin-left:4px;">${msg}…</span>
+        <span style="float:right;color:var(--text3);font-size:10px;">${tc}🔧 ${ms}ms</span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    // silently ignore — observability is optional
+  }
+}
+
+// Update domain label in right panel after each response
+function updateDomain(domain) {
+  const labels = {
+    dataverse: '🗄️ Dataverse', flows: '⚡ Flows', security: '🔒 Security',
+    crm: '💼 CRM', admin: '🏛️ Admin', general: '🤖 General'
+  };
+  const el = document.getElementById('obs-domain');
+  if (el) el.textContent = 'Domain: ' + (labels[domain] || domain || '—');
+}
+
+loadTraces();
+setInterval(loadTraces, 60000);
 </script>
 </body>
 </html>"""
